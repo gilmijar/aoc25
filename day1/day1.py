@@ -1,5 +1,5 @@
 file_name = 'sample.txt'
-# file_name = 'input.txt'
+file_name = 'input.txt'
 
 datafile = open(file_name, 'r', encoding='UTF-8').read().strip().splitlines()
 
@@ -25,10 +25,15 @@ def zero_cosses(commands:list[int]) -> int:
     zeros = 0
     for cmd in commands:
         x = pos + cmd
-        pos = x % DIAL
-        print(pos)
-        if x > 99 or x < 1:
-            zeros += 1
+        y, pos = divmod(x, DIAL)
+        passes = abs(y)
+        if cmd < 0:
+            if x == cmd:
+                passes -= 1
+            if pos == 0:
+                passes += 1
+        # print(cmd, pos, passes)
+        zeros += passes
     return zeros
 
 print(
