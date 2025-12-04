@@ -1,88 +1,21 @@
-from itertools import chain, batched
+from board import Board, Cell
+from os import chdir
 
-def tuple_add(t1: tuple[int, int], t2:tuple[int, int]) -> tuple[int, int]:
-    t3 = (
-        t1[0] + t2[0],
-        t1[1] + t2[1]
-    )
-    return t3
+chdir(__file__.rpartition("\\")[0])
 
-class Cell:
-    def __init__(self, val:int|str, row:int, col:int, brd:object):
-        self.value = val
-        self.address = (row, col)
-        self.board = brd
+file_name = "sample.txt"
+file_name = 'input.txt'
 
-    def __str__(self) -> str:
-        return str(self.value)
+datafile = open(file_name, "r", encoding="UTF-8").read().strip()
 
-    def __repr__(self) -> str:
-        return f'Cell({self.value}, {self.address[0]}, {self.address[1]})'
-    
-    @property
-    def neighbors(self) -> list[object]:
-        nbrs = self.board.neighbors(self.address) # type: ignore
-        return nbrs # type: ignore
+bd = Board.from_filling(datafile)
 
-
-class Board:
-    @classmethod
-    def from_filling(cls, filling: list[list[str]] | list[list[int]] | list[str] | list[int] | str)->object:
-        if isinstance(filling, str):
-            filling = filling.strip()
-            width = filling.index('\n')
-            height = len(filling)//width
-            if height*width != len(filling):
-                raise ValueError("Filling not rectangular")
-            flat_filling = filling.replace('\n', '')
-        elif isinstance(filling, list): # type: ignore
-            width = len(filling[0])
-            height = len(filling)
-            if isinstance(filling[0], list):
-                flat_filling = chain(*filling)
-            elif isinstance(filling[0], (str, int)):
-                flat_filling = filling
-            else:
-                raise ValueError("Unexpected inner type of board filling")
-        else:
-            raise ValueError("Unexpected type of board filling")
-        
-        new_board = cls(width, height)
-        for addr, val in zip(new_board.cells, flat_filling):
-            new_board.cells[addr] = Cell(val, *addr, new_board)
-        return new_board
-    
-    def __init__(self, w: int, h: int)->None:
-        self.height = h
-        self.width = w
-        self.cells:dict[tuple[int,int],None|Cell] = {(r, c): None for r in range(h) for c in range(w)}
-        self.size = len(self.cells)
-        self.neighbor_coords = (
-            (-1, -1), (-1, 0), (-1,  1),
-            ( 0, -1),          ( 0,  1),
-            ( 1, -1), ( 1, 0), ( 1,  1)
-        )
-
-    def as_rows(self):
-        return batched(self.cells.values(), self.width)
-
-    def to_str(self, sep='', end='\n') -> str:
-        rows = ((str(cell) for cell in row) for row in self.as_rows())
-        return end.join(sep.join(row) for row in rows)
-
-    def __str__(self) -> str:
-        return self.to_str()
-
-    def neighbors(self, addr: tuple[int, int]) -> list[Cell]:
-        resp = [self.cells.get(tuple_add(addr, shift), None) for shift in self.neighbor_coords]
-        return resp
-
-
-if __name__ == '__main__':
-    fill = [['a', 'b', 'c'], ['d', 'e', 'f']]
-    x = Board.from_filling(fill)
-    print(x)
-
-    print(
-        x.cells[(0,0)].neighbors
-    )
+print(
+        sum(bd.each_apply(
+            lambda c: 1 if (
+                c.neighbor_values.count("@") < 4 
+                and
+                c.value == '@'
+                ) else 0,
+        ))
+)
