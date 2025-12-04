@@ -1,11 +1,13 @@
 from itertools import chain, batched
 
+
 def tuple_add(t1: tuple[int, int], t2:tuple[int, int]) -> tuple[int, int]:
     t3 = (
         t1[0] + t2[0],
         t1[1] + t2[1]
     )
     return t3
+
 
 class Cell:
     def __init__(self, val:int|str, row:int, col:int, brd:object):
@@ -53,15 +55,15 @@ class Board:
             raise ValueError("Unexpected type of board filling")
         
         new_board = cls(width, height)
-        for addr, val in zip(new_board.cells, flat_filling):
-            new_board.cells[addr] = Cell(val, *addr, new_board)
+        for addr, val in zip(new_board._cells, flat_filling):
+            new_board._cells[addr] = Cell(val, *addr, new_board)
         return new_board
     
     def __init__(self, w: int, h: int)->None:
         self.height = h
         self.width = w
-        self.cells:dict[tuple[int,int],None|Cell] = {(r, c): None for r in range(h) for c in range(w)}
-        self.size = len(self.cells)
+        self._cells:dict[tuple[int,int],None|Cell] = {(r, c): None for r in range(h) for c in range(w)}
+        self.size = len(self._cells)
         self.neighbor_coords = (
             (-1, -1), (-1, 0), (-1,  1),
             ( 0, -1),          ( 0,  1),
@@ -69,7 +71,7 @@ class Board:
         )
 
     def as_rows(self):
-        return batched(self.cells.values(), self.width)
+        return batched(self.cells, self.width)
 
     def to_str(self, sep='', end='\n') -> str:
         rows = ((str(cell) for cell in row) for row in self.as_rows())
@@ -79,7 +81,7 @@ class Board:
         return self.to_str()
 
     def neighbors(self, addr: tuple[int, int]) -> list[Cell]:
-        resp = [self.cells.get(tuple_add(addr, shift), None) for shift in self.neighbor_coords]
+        resp = [self._cells.get(tuple_add(addr, shift), None) for shift in self.neighbor_coords]
         return resp
 
     def each_apply(self, func, by_rows = False):
@@ -89,7 +91,15 @@ class Board:
         """
         if by_rows:
             return [[func(cell) for cell in row] for row in self.as_rows()]
-        return [func(cell) for cell in self.cells.values()]
+        return [func(cell) for cell in self.cells]
+
+    @property
+    def cells(self) -> list[Cell]:
+        return list(self._cells.values())
+    
+    def count(self, what):
+        vals = [c.value for c in self.cells]
+        return vals.count(what)
 
 
 if __name__ == '__main__':
@@ -98,5 +108,5 @@ if __name__ == '__main__':
     print(x)
 
     print(
-        x.cells[(0,0)].neighbors
+        x._cells[(0,0)].neighbors
     )
