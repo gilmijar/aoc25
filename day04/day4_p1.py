@@ -1,8 +1,33 @@
 from itertools import chain, batched
 
+def tuple_add(t1: tuple[int, int], t2:tuple[int, int]) -> tuple[int, int]:
+    t3 = (
+        t1[0] + t2[0],
+        t1[1] + t2[1]
+    )
+    return t3
+
+class Cell:
+    def __init__(self, val:int|str, row:int, col:int, brd:object):
+        self.value = val
+        self.address = (row, col)
+        self.board = brd
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self) -> str:
+        return f'Cell({self.value}, {self.address[0]}, {self.address[1]})'
+    
+    @property
+    def neighbors(self) -> list[object]:
+        nbrs = self.board.neighbors(self.address) # type: ignore
+        return nbrs # type: ignore
+
+
 class Board:
     @classmethod
-    def from_filling(cls, filling:list[list[str|int]]|list[str|int]|str)->None:
+    def from_filling(cls, filling: list[list[str]] | list[list[int]] | list[str] | list[int] | str)->object:
         if isinstance(filling, str):
             filling = filling.strip()
             width = filling.index('\n')
@@ -30,8 +55,13 @@ class Board:
     def __init__(self, w: int, h: int)->None:
         self.height = h
         self.width = w
-        self.cells:dict[tuple[int,int],None|int|str] = {(r, c): None for r in range(h) for c in range(w)}
+        self.cells:dict[tuple[int,int],None|Cell] = {(r, c): None for r in range(h) for c in range(w)}
         self.size = len(self.cells)
+        self.neighbor_coords = (
+            (-1, -1), (-1, 0), (-1,  1),
+            ( 0, -1),          ( 0,  1),
+            ( 1, -1), ( 1, 0), ( 1,  1)
+        )
 
     def as_rows(self):
         return batched(self.cells.values(), self.width)
@@ -43,28 +73,16 @@ class Board:
     def __str__(self) -> str:
         return self.to_str()
 
+    def neighbors(self, addr: tuple[int, int]) -> list[Cell]:
+        resp = [self.cells.get(tuple_add(addr, shift), None) for shift in self.neighbor_coords]
+        return resp
 
-class Cell:
-    def __init__(self, val, row, col, brd):
-        self.value = val
-        self.address = (row, col)
-        self.board = brd
-
-    def __str__(self) -> str:
-        return str(self.value)
-
-    def __repr__(self) -> str:
-        return f'Cell({self.value}, {self.address[0]}, {self.address[1]})'
-    
-    @property
-    def neighbors(self):
-        nbrs = self.board.neighbors(*self.address)
-        return nbrs
 
 if __name__ == '__main__':
     fill = [['a', 'b', 'c'], ['d', 'e', 'f']]
     x = Board.from_filling(fill)
     print(x)
 
-    c = Cell(0, 1, 2, [1,2,3,4,5,6,7,8])
-    print(*[c,c,c])
+    print(
+        x.cells[(0,0)].neighbors
+    )
