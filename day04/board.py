@@ -1,7 +1,11 @@
 from itertools import chain, batched
+from typing import Self, Iterable, TypeVar, Callable
+
+T = TypeVar("T")
+type Addr = tuple[int, int]
 
 
-def tuple_add(t1: tuple[int, int], t2:tuple[int, int]) -> tuple[int, int]:
+def addr_add(t1: Addr, t2:Addr) -> Addr:
     t3 = (
         t1[0] + t2[0],
         t1[1] + t2[1]
@@ -10,7 +14,7 @@ def tuple_add(t1: tuple[int, int], t2:tuple[int, int]) -> tuple[int, int]:
 
 
 class Cell:
-    def __init__(self, val:int|str, row:int, col:int, brd:object):
+    def __init__(self, val:int|str, row:int, col:int, brd:"Board"):
         self.value = val
         self.address = (row, col)
         self.board = brd
@@ -22,18 +26,19 @@ class Cell:
         return f'Cell({self.value}, {self.address[0]}, {self.address[1]})'
     
     @property
-    def neighbors(self) -> list[object]:
+    def neighbors(self) -> list[Self|None]:
         nbrs = self.board.neighbors(self.address) # type: ignore
         return nbrs # type: ignore
 
     @property
-    def neighbor_values(self) -> list[str]|list[int]:
+    def neighbor_values(self) -> list[str|int]:
         return [nbr.value for nbr in self.neighbors if nbr is not None]
 
 
 class Board:
     @classmethod
-    def from_filling(cls, filling: list[list[str]] | list[list[int]] | list[str] | list[int] | str)->object:
+    def from_filling(cls, filling: list[list[str]] | list[list[int]] | list[str] | list[int] | str)->Self:
+        flat_filling:Iterable[int|str]
         if isinstance(filling, str):
             filling = filling.strip()
             width = filling.index('\n')
@@ -43,12 +48,12 @@ class Board:
                 raise ValueError("Filling not rectangular")
             flat_filling = filling
         elif isinstance(filling, list): # type: ignore
-            width = len(filling[0])
+            width = len(filling[0]) # type: ignore
             height = len(filling)
             if isinstance(filling[0], list):
-                flat_filling = chain(*filling)
-            elif isinstance(filling[0], (str, int)):
-                flat_filling = filling
+                flat_filling = chain(*filling) # type: ignore
+            elif isinstance(filling[0], (str, int)): # type: ignore
+                flat_filling = filling # type: ignore
             else:
                 raise ValueError("Unexpected inner type of board filling")
         else:
@@ -62,7 +67,7 @@ class Board:
     def __init__(self, w: int, h: int)->None:
         self.height = h
         self.width = w
-        self._cells:dict[tuple[int,int],None|Cell] = {(r, c): None for r in range(h) for c in range(w)}
+        self._cells:dict[Addr, Cell] = {}
         self.size = len(self._cells)
         self.neighbor_coords = (
             (-1, -1), (-1, 0), (-1,  1),
@@ -70,21 +75,24 @@ class Board:
             ( 1, -1), ( 1, 0), ( 1,  1)
         )
 
-    def as_rows(self):
-        return batched(self.cells, self.width)
-
-    def to_str(self, sep='', end='\n') -> str:
-        rows = ((str(cell) for cell in row) for row in self.as_rows())
-        return end.join(sep.join(row) for row in rows)
-
     def __str__(self) -> str:
         return self.to_str()
 
-    def neighbors(self, addr: tuple[int, int]) -> list[Cell]:
-        resp = [self._cells.get(tuple_add(addr, shift), None) for shift in self.neighbor_coords]
+    def __getitem__(self, addr:Addr) -> Cell:
+        return self._cells[addr]
+
+    def as_rows(self):
+        return batched(self.cells, self.width)
+
+    def to_str(self, sep:str='', end:str='\n') -> str:
+        rows = ((str(cell) for cell in row) for row in self.as_rows())
+        return end.join(sep.join(row) for row in rows)
+
+    def neighbors(self, addr: Addr) -> list[Cell|None]:
+        resp = [self._cells.get(addr_add(addr, shift), None) for shift in self.neighbor_coords]
         return resp
 
-    def each_apply(self, func, by_rows = False):
+    def each_apply(self, func:Callable[..., T], by_rows: bool = False) -> list[list[T]|T]:
         """ 
             apply func to each cell and return a list of results.
             function must accept a Cell as its first argument
@@ -97,16 +105,16 @@ class Board:
     def cells(self) -> list[Cell]:
         return list(self._cells.values())
     
-    def count(self, what):
+    def count(self, what: str|int):
         vals = [c.value for c in self.cells]
         return vals.count(what)
 
 
 if __name__ == '__main__':
     fill = [['a', 'b', 'c'], ['d', 'e', 'f']]
-    x = Board.from_filling(fill)
+    x:Board = Board.from_filling(fill)
     print(x)
 
     print(
-        x._cells[(0,0)].neighbors
+        x[(0,0)].neighbors
     )
