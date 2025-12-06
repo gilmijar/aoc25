@@ -1,7 +1,9 @@
 from board import Board, Cell
 from os import chdir
+from pathlib import Path
 
-chdir(__file__.rpartition("\\")[0])
+me = Path(__file__)
+chdir(me.parent)
 
 file_name = "sample.txt"
 file_name = 'input.txt'

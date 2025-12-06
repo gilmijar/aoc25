@@ -1,3 +1,9 @@
+from os import chdir
+from pathlib import Path
+
+me = Path(__file__)
+chdir(me.parent)
+
 file_name = 'sample.txt'
 file_name = 'input.txt'
 
