@@ -1,4 +1,4 @@
-from typing import Collection
+from typing import Iterable
 from os import chdir
 from pathlib import Path
 me = Path(__file__)
@@ -7,7 +7,7 @@ file_name = "sample.txt"
 file_name = "input.txt"
 
 
-def prod(factors: Collection[int])->int:
+def prod(factors: Iterable[int])->int:
     result = 1
     for factor in factors:
         result *= factor
