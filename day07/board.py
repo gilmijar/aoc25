@@ -1,5 +1,5 @@
 from itertools import chain, batched
-from typing import Self, Iterable, TypeVar, Callable
+from typing import Self, Iterable, TypeVar, Callable, Any
 
 T = TypeVar("T")
 type Addr = tuple[int, int]
@@ -122,6 +122,7 @@ class Cell:
         self.value = val
         self.address = (row, col)
         self.board = brd
+        self.extra:Any = None
 
     def __str__(self) -> str:
         return str(self.value)
