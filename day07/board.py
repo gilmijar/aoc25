@@ -38,9 +38,8 @@ class Cell:
     def neighbor_values(self) -> list[str|int]:
         return [nbr.value for nbr in self.neighbors if nbr is not None]
 
-    @property
     def neighbor(self, direction: Addr)->Self:
-        return self.board[self.address + direction]
+        return self.board[addr_add(self.address, direction)]
 
 
 class Board:

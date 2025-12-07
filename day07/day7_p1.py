@@ -11,4 +11,6 @@ datafile = open(file_name, "r", encoding="UTF-8").read().strip()
 
 bd:Board = Board.from_filling(datafile)
 
-print(bd)
+S = bd.find('S')[0]
+beam_front = S.neighbor(DOWN)
+beam_front.value = '|'
