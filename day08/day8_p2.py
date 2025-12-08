@@ -63,7 +63,7 @@ while len(cirquits)>1:
         all_pairs.remove(closest_pair)
         cnt += 1
         if cnt % 10 == 0:
-            print("🪄",cnt, end = '', flush=True)
+            print("🪄  ", cnt, end = '', flush=True)
 print()
 print("Merging cirquits time:", monotonic() - t0)
 print('='*20)
