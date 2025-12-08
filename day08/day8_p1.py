@@ -2,7 +2,7 @@ from os import chdir
 from pathlib import Path
 from collections import namedtuple
 from itertools import combinations
-from math import hypot
+from math import hypot, prod
 from time import monotonic
 
 me = Path(__file__)
@@ -24,12 +24,35 @@ all_pairs = list(combinations(boxes, 2))
 t0 = monotonic()
 closest_pairs:list[tuple[Box, Box]] = []
 
-
-for i in range(10):
+for i in range(1000):
     closest_pair = min(all_pairs, key = lambda p: hypot(*box_diff(*p)))
     closest_pairs.append(closest_pair)
-    print('==>', i, hypot(*box_diff(*closest_pair)))
-    del all_pairs[all_pairs.index(closest_pair)]
+    p,k = closest_pair
+    try:
+        boxes.remove(p)
+    except ValueError:
+        pass
+    try:
+        boxes.remove(k)
+    except ValueError:
+        pass
+    all_pairs.remove(closest_pair)
+
+print("Finding closest pairs time:", monotonic() - t0)
+t0 = monotonic()
+cirquits = [{*pair} for pair in closest_pairs]+[set([b]) for b in boxes]
+final_cirquits:list[set[Box]] = []
+
+while cirquits:
+    cirq = cirquits.pop()
+    for c2 in cirquits:
+        if not cirq.isdisjoint(c2):
+            c2.update(cirq)
+            break
+    else:
+        final_cirquits.append(cirq)
 
 
-print(monotonic() - t0)
+print("Merging cirquits time:", monotonic() - t0)
+print('='*20)
+print(prod(sorted((len(c) for c in final_cirquits), reverse=True)[:3]))
