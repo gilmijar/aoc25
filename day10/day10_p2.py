@@ -11,7 +11,7 @@ type Buttons = list[Btn]
 me = Path(__file__)
 chdir(me.parent)
 file_name = "sample.txt"
-# file_name = "input.txt"
+file_name = "input.txt"
 
 raw = open(file_name, "r", encoding="UTF-8").read().strip('\n').splitlines()
 
@@ -30,7 +30,6 @@ class Node:
         self.parent = parent
         self.arrival_cost = 0 if parent is None else (parent.arrival_cost + 1)
         self.button = tuple()
-        self.comp_f = lambda x: x
 
     @property
     def history(self):
@@ -50,7 +49,10 @@ class Node:
         return str(self.jolts)
 
     def __lt__(self, other:Self):
-        self.arrival_cost < other.arrival_cost
+        return self.arrival_cost < other.arrival_cost
+
+    def __le__(self, other:Self):
+        return self.arrival_cost <= other.arrival_cost
 
 
 def joltify(base: Jolt, btn: Btn):
@@ -65,13 +67,12 @@ def a_star(target: Jolt, operations:Buttons)->Node:
     misses = 0
 
     node = Node((0,) * len(target), None)
-    open, closed = [], []
-    heappush(open, node)
-    while open:
+    open_nodes, closed = [], []
+    heappush(open_nodes, node)
+    while open_nodes:
         iterations += 1
         # find q
-        candidate = heappop(open)
-
+        candidate = heappop(open_nodes)
         for op in operations:
             successor = Node(
                 joltify(candidate.jolts, op),
@@ -83,9 +84,9 @@ def a_star(target: Jolt, operations:Buttons)->Node:
                 return successor
             if any((s > t for s, t in zip(successor.jolts, target))):
                 continue
-            existing = [(n.jolts==successor.jolts and n.arrival_cost<=successor.arrival_cost) for n in chain(open, closed)]
+            existing = [(n.jolts==successor.jolts and n.arrival_cost<=successor.arrival_cost) for n in chain(open_nodes, closed)]
             if not any(existing):
-                heappush(open, successor)
+                heappush(open_nodes, successor)
             else:
                 # misses += len(successor.lineage)
                 pass
