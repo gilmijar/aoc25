@@ -25,11 +25,13 @@ def parse(line:str) -> tuple[Jolt, Buttons]:
 machines = [parse(line) for line in raw]
 
 class Node:
-    def __init__(self, jolts:Jolt, parent:Self|None):
+    def __init__(self, jolts:Jolt, parent:Self|None, tg:Jolt):
         self.jolts = jolts
         self.parent = parent
         self.arrival_cost = 0 if parent is None else (parent.arrival_cost + 1)
         self.button = tuple()
+        self.target = tg
+        self.bias = len(self.jolts) / len(self.target)
 
     @property
     def history(self):
@@ -49,10 +51,10 @@ class Node:
         return str(self.jolts)
 
     def __lt__(self, other:Self):
-        return self.arrival_cost < other.arrival_cost
+        return self.arrival_cost + self.bias < other.arrival_cost + other.bias
 
     def __le__(self, other:Self):
-        return self.arrival_cost <= other.arrival_cost
+        return self.arrival_cost + self.bias <= other.arrival_cost + other.bias
 
 
 def joltify(base: Jolt, btn: Btn):
@@ -65,8 +67,9 @@ def joltify(base: Jolt, btn: Btn):
 def a_star(target: Jolt, operations:Buttons)->Node:
     iterations = 0
     misses = 0
+    pushes = 0
 
-    node = Node((0,) * len(target), None)
+    node = Node((0,) * len(target), None, target)
     open_nodes, closed = [], []
     heappush(open_nodes, node)
     while open_nodes:
@@ -76,7 +79,8 @@ def a_star(target: Jolt, operations:Buttons)->Node:
         for op in operations:
             successor = Node(
                 joltify(candidate.jolts, op),
-                parent=candidate
+                parent=candidate,
+                tg=target
             )
             successor.button = op
             if successor.jolts == target:
@@ -87,6 +91,9 @@ def a_star(target: Jolt, operations:Buttons)->Node:
             existing = [(n.jolts==successor.jolts and n.arrival_cost<=successor.arrival_cost) for n in chain(open_nodes, closed)]
             if not any(existing):
                 heappush(open_nodes, successor)
+                pushes += 1
+                if pushes % 10 !=0:
+                    print('+', pushes, flush=True)
             else:
                 # misses += len(successor.lineage)
                 pass
