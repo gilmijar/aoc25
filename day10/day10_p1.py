@@ -7,7 +7,7 @@ from itertools import chain
 me = Path(__file__)
 chdir(me.parent)
 file_name = "sample.txt"
-# file_name = "input.txt"
+file_name = "input.txt"
 
 raw = open(file_name, "r", encoding="UTF-8").read().strip('\n').splitlines()
 
@@ -58,7 +58,7 @@ class Node:
 
 def a_star(target: bitarray, operations:list[bitarray])->list[bitarray]:
     def comp(x:Node)->int:
-        return x.arrival_cost + (x.lights ^ target).count()
+        return x.arrival_cost #+ (x.lights ^ target).count()
 
     node = Node(frba(len(target)), None)
     open, closed = [node], []
